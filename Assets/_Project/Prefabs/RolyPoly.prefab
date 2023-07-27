@@ -149,7 +149,7 @@ MonoBehaviour:
   _isGrounded: 0
   _groundLayer:
     serializedVersion: 2
-    m_Bits: 128
+    m_Bits: 2432
 --- !u!114 &7035760649005578722
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -168,7 +168,8 @@ MonoBehaviour:
   _rolyPolyRotationSpeed: 100
   _rolyPolyBallRotationSpeed: 50
   _rolyPolyJumpStrenght: 25
-  _rolyPolySlamStrenght: 10
+  _rolyPolySlamStrenght: 50
+  _rolyPolySlamRange: 100
   _bodyBones:
   - {fileID: 0}
   - {fileID: 0}
@@ -202,9 +203,6 @@ MonoBehaviour:
   _segmentFeetPosRotationSpeed: 50
   _feetBoneHeightRelationOffset: 0.2
   _maxHeightfeetBoneDistanceDifference: 0.2
-  _groundLayer:
-    serializedVersion: 2
-    m_Bits: 384
   _stickiness: 10
 --- !u!1001 &6643183253296126064
 PrefabInstance:

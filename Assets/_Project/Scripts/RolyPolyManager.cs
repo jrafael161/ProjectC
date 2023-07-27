@@ -32,13 +32,13 @@ public class RolyPolyManager : MonoBehaviour
     [SerializeField]
     LayerMask _groundLayer;
     
-    public RolyPolyMovement RolyPolyMovement { get => _rolyPolyMovement; set => _rolyPolyMovement = value; }
-    public InputManager InputManager { get => _inputManager; set => _inputManager = value; }
-    public PinballManager PinballManager { get => _pinballManager; set => _pinballManager = value; }
-    public GameObject RolyPolyModel { get => _rolyPolyModel; set => _rolyPolyModel = value; }
-    public GameObject CameraTarget { get => _cameraTarget; set => _cameraTarget = value; }
-    public bool IsGrounded { get => _isGrounded; set => _isGrounded = value; }
-    public LayerMask GroundLayer { get => _groundLayer; set => _groundLayer = value; }
+    public RolyPolyMovement RolyPolyMovement { get => _rolyPolyMovement; }
+    public InputManager InputManager { get => _inputManager; }
+    public PinballManager PinballManager { get => _pinballManager; }
+    public GameObject RolyPolyModel { get => _rolyPolyModel; }
+    public GameObject CameraTarget { get => _cameraTarget; }
+    public bool IsGrounded { get => _isGrounded; }
+    public LayerMask GroundLayer { get => _groundLayer; }
 
     private void Start()
     {
@@ -79,7 +79,7 @@ public class RolyPolyManager : MonoBehaviour
     {
         if (Mathf.Abs(velocity.x) > _speedLimit)
         {
-            Debug.Log("Before:" + velocity.x);
+            //Debug.Log("Before:" + velocity.x);
             if (Mathf.Sign(velocity.x) > 0)
             {
                 GetComponent<Rigidbody>().velocity.Set(_speedLimit, velocity.y, velocity.z);
@@ -88,12 +88,12 @@ public class RolyPolyManager : MonoBehaviour
             {
                 GetComponent<Rigidbody>().velocity.Set(-_speedLimit, velocity.y, velocity.z);
             }
-            Debug.Log("After:" + velocity.x);
+            //Debug.Log("After:" + velocity.x);
         }
 
         if (Mathf.Abs(velocity.y) > _speedLimit)
         {
-            Debug.Log("Before:" + velocity.y);
+            //Debug.Log("Before:" + velocity.y);
             if (Mathf.Sign(velocity.y) > 0)
             {
                 GetComponent<Rigidbody>().velocity.Set(velocity.x, _speedLimit, velocity.z);
@@ -102,12 +102,12 @@ public class RolyPolyManager : MonoBehaviour
             {
                 GetComponent<Rigidbody>().velocity.Set(velocity.x, -_speedLimit, velocity.z);
             }
-            Debug.Log("After:" + velocity.y);
+            //Debug.Log("After:" + velocity.y);
         }
 
         if (Mathf.Abs(velocity.z) > _speedLimit)
         {
-            Debug.Log("Before:" + velocity.z);
+            //Debug.Log("Before:" + velocity.z);
             if (Mathf.Sign(velocity.z) > 0)
             {
                 GetComponent<Rigidbody>().velocity.Set(velocity.x, velocity.y, _speedLimit);
@@ -116,7 +116,7 @@ public class RolyPolyManager : MonoBehaviour
             {
                 GetComponent<Rigidbody>().velocity.Set(velocity.x, velocity.y, -_speedLimit);
             }
-            Debug.Log("After:" + velocity.z);
+            //Debug.Log("After:" + velocity.z);
         }
     }
 
@@ -127,6 +127,7 @@ public class RolyPolyManager : MonoBehaviour
             LimitVelocity(velocity);
             return true;
         }
+
         return false;
     }
 

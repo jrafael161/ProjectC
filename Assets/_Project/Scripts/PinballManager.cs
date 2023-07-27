@@ -26,7 +26,7 @@ public class PinballManager : MonoBehaviour
     [SerializeField]
     GameObject _springBlock;
     [SerializeField]
-    GameObject _rolyPoly;
+    RolyPolyManager _rolyPoly;
     [SerializeField]
     GameObject _ejectionGate;
     [SerializeField]
@@ -156,14 +156,16 @@ public class PinballManager : MonoBehaviour
 
             Vector2 movementVector = (_initialCursorPos - _currentCursorPos) * -1;
             Vector3 movementVector3 = Vector3.zero;
-            if (Vector3.Dot(-Vector3.up, Camera.main.transform.forward) > 0)
+
+            if (cameraMode == CameraMode.TopView)
             {
                 movementVector3 = new Vector3(movementVector.x, 0, movementVector.y);
             }
-            else if (Vector3.Dot(Vector3.forward, Camera.main.transform.forward) > 0)
+            else if (cameraMode == CameraMode.FrontView)
             {
                 movementVector3 = new Vector3(movementVector.x, movementVector.y, 0);
             }
+
             Vector3 movementVector3OnPlane = Vector3.ProjectOnPlane(movementVector3, Camera.main.transform.forward);
             Vector3 redirectionVector = -movementVector3OnPlane;
 
@@ -193,6 +195,7 @@ public class PinballManager : MonoBehaviour
         RolyPolyCameraTopDownView.Priority = 11;
         cameraMode = CameraMode.TopView;
         _rolyPoly.transform.SetPositionAndRotation(_rolyPoly.transform.position, Quaternion.Euler(new Vector3(0, 0, 0)));
+        _rolyPoly.RolyPolyModel.transform.localScale = new Vector3(1, 1, 1);
     }
 
     private void ChangeCameraToFrontView()
@@ -201,6 +204,7 @@ public class PinballManager : MonoBehaviour
         RolyPolyCameraTopDownView.Priority = 9;
         cameraMode = CameraMode.FrontView;
         _rolyPoly.transform.SetPositionAndRotation(_rolyPoly.transform.position, Quaternion.Euler(new Vector3(0,90,0)));
+        _rolyPoly.RolyPolyModel.transform.localScale = new Vector3(1, 1, 1);
     }
 
     private void HandleCameraZoomInZoomOut(float delta)
@@ -231,6 +235,7 @@ public class PinballManager : MonoBehaviour
         {
             StopAllCoroutines();
 
+            ChangeCameraToTopDownView();
             _rolyPoly.GetComponent<Rigidbody>().velocity = Vector3.zero;
             _springBlock.GetComponent<Rigidbody>().inertiaTensor = Vector3.zero;
             _springBlock.GetComponent<Rigidbody>().velocity = Vector3.zero;

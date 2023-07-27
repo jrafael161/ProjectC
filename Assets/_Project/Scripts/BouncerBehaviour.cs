@@ -11,10 +11,10 @@ public class BouncerBehaviour : MonoBehaviour
         if (collision.gameObject.GetComponent<RolyPolyManager>())
         {
             Vector3 resultingVector = collision.gameObject.GetComponent<Rigidbody>().velocity * _bounceStrenght;
+
             if (collision.gameObject.GetComponent<RolyPolyManager>().CheckVelocity(resultingVector))
-            {
                 return;
-            }
+            
             collision.gameObject.GetComponent<Rigidbody>().AddForce(resultingVector,ForceMode.Impulse);
         }
     }

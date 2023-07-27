@@ -21,6 +21,8 @@ public class RolyPolyMovement : MonoBehaviour
     float _rolyPolyJumpStrenght = 1;
     [SerializeField]
     float _rolyPolySlamStrenght = 1;
+    [SerializeField]
+    float _rolyPolySlamRange = 1;
 
     //Segment movement
     [SerializeField]
@@ -53,11 +55,14 @@ public class RolyPolyMovement : MonoBehaviour
     float _maxHeightfeetBoneDistanceDifference = 1;
 
     [SerializeField]
-    LayerMask _groundLayer;
-    [SerializeField]
     float _stickiness = 1;
 
     bool _stickToGround = false;
+
+    [SerializeField]
+    bool _currentDirection = false;
+    [SerializeField]
+    bool _previousDirection = false;//left=false,right=true
 
     private void Start()
     {
@@ -261,34 +266,91 @@ public class RolyPolyMovement : MonoBehaviour
     {
         Vector3 rolyPolyVelocity = GetComponent<Rigidbody>().velocity;
 
+        if (Mathf.Round(rolyPolyVelocity.magnitude) <= 0)//Avoids the roly poly rotating uncontrolably when the velocity is very small
+            return;
+        
         if (_rolyPolyManager.PinballManager.cameraMode == CameraMode.TopView)
         {
             transform.LookAt(transform.position + Vector3.ProjectOnPlane(rolyPolyVelocity.normalized, transform.up), transform.up);
+            //transform.LookAt(transform.position + Vector3.ProjectOnPlane(new Vector3(Mathf.Round(rolyPolyVelocity.normalized.x), 0, Mathf.Round(rolyPolyVelocity.normalized.z)), transform.up), transform.up);//Makes the look at direction a 8 way movement, I guess by discretizing the velocity, maybe?
+
+            _rolyPolyManager.RolyPolyModel.transform.Rotate(delta * _rolyPolyBallRotationSpeed * (Mathf.Abs(rolyPolyVelocity.z) + Mathf.Abs(rolyPolyVelocity.x) + Mathf.Abs(rolyPolyVelocity.y)), 0, 0, Space.Self);
         }
         if (_rolyPolyManager.PinballManager.cameraMode == CameraMode.FrontView)
         {
-            if (Vector3.Dot(transform.up,Vector3.up) > 0)//I need to check the orientation of the up vector because sometimes it gets flipped messing up the calculation of the look at, thats why depending the orientation it uses the transform.up or down
-            {
-                transform.LookAt(transform.position + Vector3.ProjectOnPlane(rolyPolyVelocity.normalized, transform.right), transform.up);
-            }
+            if (Mathf.Round(rolyPolyVelocity.x) > 0)
+                _currentDirection = true;
             else
-            {
-                transform.LookAt(transform.position + Vector3.ProjectOnPlane(rolyPolyVelocity.normalized, transform.right), -transform.up);
-            }
-            
-        }
+                _currentDirection = false;
 
-        _rolyPolyManager.RolyPolyModel.transform.Rotate(delta * _rolyPolyBallRotationSpeed * (Mathf.Abs(rolyPolyVelocity.z) + Mathf.Abs(rolyPolyVelocity.x) + Mathf.Abs(rolyPolyVelocity.y)), 0, 0, Space.Self);
+            if (_previousDirection != _currentDirection)
+            {
+                //transform.LookAt(transform.position + Vector3.ProjectOnPlane(rolyPolyVelocity.normalized, transform.right), transform.up);
+                if (_currentDirection)
+                    transform.SetPositionAndRotation(transform.position, Quaternion.Euler(new Vector3(0, 90, 0)));
+                else
+                    transform.SetPositionAndRotation(transform.position, Quaternion.Euler(new Vector3(0, 270, 0)));
+
+                _previousDirection = _currentDirection;
+            }
+
+            _rolyPolyManager.RolyPolyModel.transform.Rotate(delta * _rolyPolyBallRotationSpeed * (Mathf.Round(Mathf.Abs(rolyPolyVelocity.x)) + (Mathf.Round(Mathf.Abs(rolyPolyVelocity.y)))), 0, 0, Space.Self);
+
+            //if ((Vector3.Dot(transform.up, Vector3.up) > 0))//I need to check the orientation of the up vector because sometimes it gets flipped messing up the calculation of the look at, thats why depending the orientation it uses the transform.up or down, this approach didnt work, update: since the Y axis is no longer changing direction this evaluation is not needed anymore
+            //{
+            //    _rolyPolyManager.RolyPolyModel.transform.Rotate(delta * _rolyPolyBallRotationSpeed * (Mathf.Round(Mathf.Abs(rolyPolyVelocity.x)) + (Mathf.Round(Mathf.Abs(rolyPolyVelocity.y)))), 0, 0, Space.Self);
+
+            //    //if (Mathf.Abs(Mathf.Round(rolyPolyVelocity.x)) > Mathf.Abs(Mathf.Round(rolyPolyVelocity.y)))
+            //    //    _rolyPolyManager.RolyPolyModel.transform.Rotate(delta * _rolyPolyBallRotationSpeed * (Mathf.Round(Mathf.Abs(rolyPolyVelocity.x))), 0, 0, Space.Self);
+            //    //else
+            //    //    _rolyPolyManager.RolyPolyModel.transform.Rotate(delta * _rolyPolyBallRotationSpeed * (Mathf.Round(Mathf.Abs(rolyPolyVelocity.y))), 0, 0, Space.Self);
+            //}
+            //else
+            //{
+            //    _rolyPolyManager.RolyPolyModel.transform.Rotate(delta * -_rolyPolyBallRotationSpeed * (Mathf.Round(Mathf.Abs(rolyPolyVelocity.x)) + Mathf.Round(Mathf.Abs(rolyPolyVelocity.y))), 0, 0, Space.Self);
+
+            //    //if (Mathf.Abs(Mathf.Round(rolyPolyVelocity.x)) > Mathf.Abs(Mathf.Round(rolyPolyVelocity.y)))
+            //    //    _rolyPolyManager.RolyPolyModel.transform.Rotate(delta * -_rolyPolyBallRotationSpeed * (Mathf.Round(Mathf.Abs(rolyPolyVelocity.x))), 0, 0, Space.Self);
+            //    //else
+            //    //    _rolyPolyManager.RolyPolyModel.transform.Rotate(delta * -_rolyPolyBallRotationSpeed * (Mathf.Round(Mathf.Abs(rolyPolyVelocity.y))), 0, 0, Space.Self);
+            //}
+        }
+    }
+
+    private float ConvertAngles(float angle)
+    {
+        float convertedAngle = angle;
+        if (angle < 0)
+            convertedAngle = 360 - angle;
+
+        return convertedAngle;
     }
 
     private void SquashRolyPoly(float delta)
     {
         Vector3 rolyPolyVelocity = GetComponent<Rigidbody>().velocity;
 
-        if (Mathf.Abs(rolyPolyVelocity.z) > 0 || Mathf.Abs(rolyPolyVelocity.x) > 0 || Mathf.Abs(rolyPolyVelocity.y) > 0)
+        if (_rolyPolyManager.PinballManager.cameraMode == CameraMode.TopView)
         {
-            _rolyPolyManager.RolyPolyModel.transform.localScale = new Vector3(Mathf.Lerp(1, .5f, (Mathf.Abs(rolyPolyVelocity.z) + Mathf.Abs(rolyPolyVelocity.x) + Mathf.Abs(rolyPolyVelocity.y)) * delta * _scaleDamping), 1, 1);
+            if (Mathf.Abs(rolyPolyVelocity.z) > 0 || Mathf.Abs(rolyPolyVelocity.x) > 0)
+            {
+                if (Mathf.Abs(rolyPolyVelocity.z) > Mathf.Abs(rolyPolyVelocity.x))
+                {
+                    _rolyPolyManager.RolyPolyModel.transform.localScale = new Vector3(Mathf.Lerp(1, .5f, Mathf.Abs(Mathf.Round(rolyPolyVelocity.magnitude)) * delta * _scaleDamping), 1, 1);//still wobly, update: since the velocity magnitude has been rounded its no longer wobly 
+                }
+                else
+                {
+                    _rolyPolyManager.RolyPolyModel.transform.localScale = new Vector3(Mathf.Lerp(1, .5f, Mathf.Abs(Mathf.Round(rolyPolyVelocity.magnitude)) * delta * _scaleDamping), 1, 1);
+                }
+            }
         }
+
+        //if (_rolyPolyManager.PinballManager.cameraMode == CameraMode.FrontView)//I dont like how the squash looks from the side
+        //{
+        //    if (Mathf.Abs(rolyPolyVelocity.x) > 0 || Mathf.Abs(rolyPolyVelocity.y) > 0)
+        //        _rolyPolyManager.transform.localScale = new Vector3(1, Mathf.Lerp(1, .5f, Mathf.Abs(Mathf.Round(rolyPolyVelocity.magnitude)) * delta * _scaleDamping), 1);//Correct squash
+        //        //_rolyPolyManager.RolyPolyModel.transform.localScale = new Vector3(Mathf.Lerp(1, .5f, (Mathf.Abs(Mathf.Round(rolyPolyVelocity.x)) + Mathf.Round(Mathf.Abs(rolyPolyVelocity.y))) * delta * _scaleDamping), 1, 1);//Incorrect squash
+        //}
     }
 
     public void Jump()
@@ -299,11 +361,21 @@ public class RolyPolyMovement : MonoBehaviour
     public void GroundSlam()
     {
         //Add a vertical squash to the ground slam
-        GetComponent<Rigidbody>().AddForce(_rolyPolySlamStrenght * GetComponent<Rigidbody>().velocity.y * -transform.up, ForceMode.Acceleration);//The slam need more force acceleration at the end may use a curve for the acceleration movement?
+        GetComponent<Rigidbody>().AddForce(new Vector3(-GetComponent<Rigidbody>().velocity.x, -GetComponent<Rigidbody>().velocity.y, -GetComponent<Rigidbody>().velocity.z), ForceMode.VelocityChange);
         if (!_stickToGround)
         {
-            _stickToGround = true;
-            StartCoroutine("Unstick");
+            if (Physics.Raycast(transform.position, GetRolyPolyDown(), out RaycastHit hitInfo, _rolyPolySlamRange, _rolyPolyManager.GroundLayer))
+            {
+                if (hitInfo.transform.gameObject.layer != LayerMask.NameToLayer("Bouncer"))
+                {
+                    _stickToGround = true;
+                    StartCoroutine("Unstick");
+                }
+                else
+                {
+                    GetComponent<Rigidbody>().AddForce(GetRolyPolyDown() * _rolyPolySlamStrenght, ForceMode.Impulse);
+                }
+            }
         }
     }
 
@@ -325,7 +397,7 @@ public class RolyPolyMovement : MonoBehaviour
     {
         if (_stickToGround)
         {
-            if (Physics.Raycast(transform.position, GetRolyPolyDown(), out RaycastHit hitInfo, 100f, _groundLayer))
+            if (Physics.Raycast(transform.position, GetRolyPolyDown(), out RaycastHit hitInfo, _rolyPolySlamRange, _rolyPolyManager.GroundLayer))
             {
                 Debug.DrawRay(transform.position, GetRolyPolyDown());
                 transform.SetPositionAndRotation(Vector3.Lerp(transform.position, hitInfo.point, delta * _stickiness), transform.rotation);
