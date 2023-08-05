@@ -280,6 +280,8 @@ public class RolyPolyMovement : MonoBehaviour
         {
             if (Mathf.Round(rolyPolyVelocity.x) > 0)
                 _currentDirection = true;
+            else if(Mathf.Round(rolyPolyVelocity.x) == 0)
+                _previousDirection = _currentDirection;
             else
                 _currentDirection = false;
 
@@ -317,15 +319,6 @@ public class RolyPolyMovement : MonoBehaviour
         }
     }
 
-    private float ConvertAngles(float angle)
-    {
-        float convertedAngle = angle;
-        if (angle < 0)
-            convertedAngle = 360 - angle;
-
-        return convertedAngle;
-    }
-
     private void SquashRolyPoly(float delta)
     {
         Vector3 rolyPolyVelocity = GetComponent<Rigidbody>().velocity;
@@ -361,14 +354,17 @@ public class RolyPolyMovement : MonoBehaviour
     public void GroundSlam()
     {
         //Add a vertical squash to the ground slam
-        GetComponent<Rigidbody>().AddForce(new Vector3(-GetComponent<Rigidbody>().velocity.x, -GetComponent<Rigidbody>().velocity.y, -GetComponent<Rigidbody>().velocity.z), ForceMode.VelocityChange);
+        //GetComponent<Rigidbody>().AddForce(new Vector3(-GetComponent<Rigidbody>().velocity.x, -GetComponent<Rigidbody>().velocity.y, -GetComponent<Rigidbody>().velocity.z), ForceMode.VelocityChange);
+        GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 0);
         if (!_stickToGround)
         {
             if (Physics.Raycast(transform.position, GetRolyPolyDown(), out RaycastHit hitInfo, _rolyPolySlamRange, _rolyPolyManager.GroundLayer))
             {
                 if (hitInfo.transform.gameObject.layer != LayerMask.NameToLayer("Bouncer"))
                 {
+                    StopAllCoroutines();
                     _stickToGround = true;
+                    StartCoroutine("SlamSquash");
                     StartCoroutine("Unstick");
                 }
                 else
@@ -405,10 +401,28 @@ public class RolyPolyMovement : MonoBehaviour
         }
     }
 
+    IEnumerator SlamSquash()
+    {
+        bool squashed = false;
+        while (!squashed)
+        {
+            if (GetComponent<Rigidbody>().velocity.y == 0)
+            {
+                transform.localScale = new Vector3(1, .5f, 1);
+                GetComponent<SphereCollider>().radius = .25f;
+                squashed = true;
+            }
+            yield return null;
+        }
+        yield return new WaitForSeconds(.3f);
+        transform.localScale = new Vector3(1, 1, 1);
+        GetComponent<SphereCollider>().radius = .5f;
+    }
+
     IEnumerator Unstick()
     {
         float startTime = Time.time;
-        while (Time.time < startTime + .5f)
+        while (Time.time < startTime + .3f)
         {
             //if (_rolyPolyManager.PinballManager.cameraMode == CameraMode.TopView)
             //{

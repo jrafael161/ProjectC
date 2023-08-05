@@ -65,7 +65,13 @@ public class PinballManager : MonoBehaviour
     {
         _inputManager = GetComponent<InputManager>();
         _spring = new JointSpring();
-        Application.targetFrameRate = 60;
+
+        #if UNITY_EDITOR
+                Application.targetFrameRate = 60;
+        #else
+                Application.targetFrameRate = -1;
+        #endif
+
         StartPinballMachine();
     }
 
@@ -239,7 +245,7 @@ public class PinballManager : MonoBehaviour
             _rolyPoly.GetComponent<Rigidbody>().velocity = Vector3.zero;
             _springBlock.GetComponent<Rigidbody>().inertiaTensor = Vector3.zero;
             _springBlock.GetComponent<Rigidbody>().velocity = Vector3.zero;
-            _rolyPoly.transform.SetPositionAndRotation(_rolyPolySpawn.position,Quaternion.identity);
+            _rolyPoly.transform.SetPositionAndRotation(_rolyPolySpawn.position, new Quaternion(0,0,0,0));
         }
     }
 

@@ -9,16 +9,21 @@ public enum RedirectionVector
    Right
 }
 
-public class SpecialBouncer : MonoBehaviour
+public class SpecialBouncer : MonoBehaviour, IRolyPolySoundEvents
 {
     [SerializeField]
     float _bounceStrenght;
     [SerializeField]
     RedirectionVector _bounceDirection;
+    [SerializeField]
+    AudioClip _bounceSound;
+    [SerializeField]
+    AudioSources _audioSource;
     private void OnCollisionEnter(Collision collision)
     {
         if (collision.gameObject.GetComponent<RolyPolyManager>())
         {
+            PlaySound(_bounceSound, _audioSource);
             Vector3 velocityRedirectionVector = new Vector3(collision.gameObject.GetComponent<Rigidbody>().velocity.x, collision.gameObject.GetComponent<Rigidbody>().velocity.y, Mathf.Abs(collision.gameObject.GetComponent<Rigidbody>().velocity.z));
             Vector3 resultingVector = (velocityRedirectionVector + GetBounceDirection()) * _bounceStrenght;//Instead of having hardcoded the vector to take into consideration it could be passed from the editor or at least have options
 
@@ -56,5 +61,10 @@ public class SpecialBouncer : MonoBehaviour
             default:
                 return transform.up;
         }
+    }
+
+    public void PlaySound(AudioClip audioClip, AudioSources audioSource)
+    {
+        MasterAudioManager._instance.PlaySound(audioSource, audioClip);
     }
 }
